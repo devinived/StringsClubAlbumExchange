@@ -10,7 +10,7 @@ import dbManager as db
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
-
+EXCHANGE_INFO = 1235343710753914880
 bot = commands.Bot(intents = discord.Intents.default(), command_prefix="ae!")
 
 def hasperms(userid):
@@ -37,7 +37,8 @@ def validExchangeDate(date):
 async def on_ready():
     print(f"Synced {len(await bot.tree.sync())} commands globally")
 
-@bot.tree.command()
+@bot.tree.command(description = "Sets up an Album Exchange")
+@app_commands.describe(enddate = "The date that you are planning on ending this album exchange.")
 async def setup_exchange(interaction:discord.Interaction, enddate:str):
     if not hasperms(interaction.user.id):
         interaction.response.send_message("You can't do that.")
@@ -48,6 +49,10 @@ async def setup_exchange(interaction:discord.Interaction, enddate:str):
     confirmation.add_field(name="Ending date", value = f"{enddate}")
     await interaction.response.send_message(embed=confirmation)
     db.make_table(date=enddate)
+
+    channel=bot.get_channel(EXCHANGE_INFO)
+    await channel.send(f"# A New Album Exchange Has Started!\nThe end date will be `{enddate}`",allowed_mentions=None)
+
 
 @bot.tree.command(description = "Join the album exchange! listed is the end date of the current exchange. Join that one!")
 @app_commands.describe(which_exchange = "The Album Exchange to take part in.", entry = "The spotify link to your album of choice.")
@@ -61,7 +66,8 @@ async def join_exchange(interaction:discord.Interaction, which_exchange:str,entr
     if db.userJoined(which_exchange, interaction.user.id):
         await interaction.response.send_message("You've already joined the Album Exchange!")
         return
-    await interaction.channel.send(f"{interaction.user.mention} has entered the album exchange!")
+    channel=bot.get_channel(EXCHANGE_INFO)
+    await channel.send(f"{interaction.user.mention} has entered the album exchange!")
     await interaction.response.send_message("You've joined this exchange: remember, it's more fun if your entry is secret, that's why only you can see this message!", ephemeral=True)
     db.joinExchange(date=which_exchange,user_id=interaction.user.id, entry_url=entry)
 
@@ -89,6 +95,8 @@ async def end_exchange(interaction:discord.Interaction,which_exchange:str):
     try:
         db.archive(which_exchange)
         await interaction.response.send_message("Album Exchange Ended.")
+        channel=bot.get_channel(EXCHANGE_INFO)
+        await channel.send(f"# Exchange Ended!\nThe exchange ending `{which_exchange}` has concluded. Thanks for participating!",allowed_mentions=None)
 
     except Exception as e:
         await interaction.response.send_message(f"Error: {e}")
@@ -112,7 +120,7 @@ async def create_assignments(interaction:discord.Interaction, which_exchange:str
     if not hasperms(interaction.user.id):
         interaction.response.send_message("You can't do that.")
         return
-    
+
     await interaction.response.defer(thinking=True)
     if which_channel:
         channel = which_channel.id

@@ -113,6 +113,32 @@ async def end_autocomplete(
             data.append(app_commands.Choice(name=ex, value=ex))
     return data
 
+@bot.tree.command(description="Check if a given user has entered this week's Album Exchange")
+async def user_joined_exchange(interaction:discord.Interaction, which_exchange:str,user:discord.User=None):
+    if user==None:
+        user=interaction.user
+    joined = db.userJoined(which_exchange,user.id)
+
+    if joined:
+        await interaction.response.send_message(f"{user.mention} has joined the exchange!", allowed_mentions=None)
+    else:
+        if user == interaction.user:
+            await interaction.response.send_message(f"{user.mention} has **not** joined the exchange. You should try it out! Use </join_exchange:1235053603534803057> to join!", allowed_mentions=None)
+
+        else:
+            await interaction.response.send_message(f"{user.mention} has **not** joined the exchange. Encourage them to join with the </join_exchange:1235053603534803057> command!", allowed_mentions=None)
+@user_joined_exchange.autocomplete("which_exchange")
+async def user_joined_autocomplete(
+        interaction:discord.Interaction,
+        current: str)->typing.List[app_commands.Choice[str]]:
+    
+    data = []
+    if len(db.getExchanges()) == 0:
+        data.append(app_commands.Choice(name="No exchange to create assignments for.", value = "No active"))
+    else:
+        for ex in db.getExchanges():
+            data.append(app_commands.Choice(name=ex, value=ex))
+    return data
 
 @bot.tree.command(description = "Creates the random assignments for the Album Exchange")
 @app_commands.describe(which_exchange="The Album Exchange to make assignments for", which_channel = "The channel to send the assignments. If none specified, defaults to current channel.")

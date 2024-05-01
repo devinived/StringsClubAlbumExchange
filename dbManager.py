@@ -3,6 +3,7 @@ import os
 from os import listdir
 from os.path import isfile, join
 import random
+import asyncio
 print("Connected to db manager")
 CURRENT = "exchanges"
 ARCHIVE = "old exchanges"
@@ -43,7 +44,7 @@ def archive(date):
     os.rename(src = f"{CURRENT}/{date}.db",dst = f"{ARCHIVE}/{date}.db")
 
 def show_all(date):
-    if os.CURRENT.exists(f"{CURRENT}/{date}.db"):
+    if os.path.exists(f"{CURRENT}/{date}.db"):
         conn = sqlite3.connect(f"{CURRENT}/{date}.db")
         c = conn.cursor()
 
@@ -63,22 +64,33 @@ def userJoined(date, user_id):
         return False
     
 def shuffle(date):
-    
-    output = []
-    usedLinks = []
-    allrows = show_all(date)
-    if len(allrows) < 2:
-        return None
-    usercount = allrows
-    links = []
-    for link in allrows:
-        links.append(link[1])
-    
-    for user in allrows:
-        
-        choice = random.choice(links)
-        while choice == user[1]:
-            choice = random.choice(links)
-        links.remove(choice)
-        output.append((user[0],choice))
-    return output
+    redo = True
+    while redo:
+        redo = False
+        output = []
+        allrows = show_all(date)
+        if len(allrows) < 2:
+            return None
+        usercount = allrows
+        links = []
+        for link in allrows:
+            links.append(link[1])
+
+        for user in allrows:
+            if len(links) == 1 and user[1] in links:
+                redo = True
+                output=[]
+                links=[]
+            else:
+                choice = random.choice(links)
+                while choice == user[1]:
+                    choice = random.choice(links)
+                links.remove(choice)
+                output.append((user[0],choice))
+        #tthis check here just in case for some reason the output doesnt have everyone's assignment, which has happened during testing
+        if len(output) == len(allrows):
+            return output
+        else:
+            redo=True
+            output=[]
+            links=[]

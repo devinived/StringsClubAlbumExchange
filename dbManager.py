@@ -4,21 +4,21 @@ from os import listdir
 from os.path import isfile, join
 import random
 print("Connected to db manager")
-PATH = "exchanges"
+CURRENT = "exchanges"
 ARCHIVE = "old exchanges"
 
 
 def make_table(date):
     date = date.lower()
-    conn = sqlite3.connect(f"{PATH}/{date}.db")
+    conn = sqlite3.connect(f"{CURRENT}/{date}.db")
     c = conn.cursor()
 
     c.execute("""CREATE TABLE if not exists entries (
               user_id INT,
               entry_url STR)""")
     
-def getExchanges() -> list:
-    allexchanges = os.listdir(PATH)
+def getExchanges():
+    allexchanges = os.listdir(CURRENT)
     exchanges = []
     for i in allexchanges:
         exchanges.append(str(i).strip(".db"))
@@ -26,7 +26,7 @@ def getExchanges() -> list:
 
 def joinExchange(date, user_id, entry_url):
     date = date.lower()
-    conn = sqlite3.connect(f"{PATH}/{date}.db")
+    conn = sqlite3.connect(f"{CURRENT}/{date}.db")
     c = conn.cursor()
 
     c.execute(("""
@@ -36,15 +36,15 @@ def joinExchange(date, user_id, entry_url):
     conn.close() 
 
 def archive(date):
-    conn = sqlite3.connect(f"{PATH}/{date}.db")
+    conn = sqlite3.connect(f"{CURRENT}/{date}.db")
 
     date = date.lower()
     conn.close()
-    os.rename(src = f"{PATH}/{date}.db",dst = f"{ARCHIVE}/{date}.db")
+    os.rename(src = f"{CURRENT}/{date}.db",dst = f"{ARCHIVE}/{date}.db")
 
 def show_all(date):
-    if os.path.exists(f"{PATH}/{date}.db"):
-        conn = sqlite3.connect(f"{PATH}/{date}.db")
+    if os.CURRENT.exists(f"{CURRENT}/{date}.db"):
+        conn = sqlite3.connect(f"{CURRENT}/{date}.db")
         c = conn.cursor()
 
         c.execute("SELECT * FROM entries")

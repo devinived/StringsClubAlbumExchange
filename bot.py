@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 import typing
 import asyncio
-from datetime import datetimes
+from datetime import datetime
 import dbManager as db
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -20,7 +20,6 @@ def hasperms(userid):
     else:
         return False
 
-import dbManager as db
 def validExchangeDate(date):
     exchanges = db.getExchanges()
 

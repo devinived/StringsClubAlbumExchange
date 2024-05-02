@@ -1,8 +1,6 @@
 import sqlite3
 OPENORCLOSED = "additional dbs/openorclosed.db"
 
-
-
 def make_table():
     conn = sqlite3.connect(OPENORCLOSED)
     c = conn.cursor()
@@ -28,6 +26,7 @@ def add_one(date, status = True):
     c.execute("""INSERT INTO exchanges VALUES (?,?)""",(date,status))
     conn.commit()
     conn.close()
+
 def show_all(date):
     conn = sqlite3.connect(OPENORCLOSED)
     c = conn.cursor()
@@ -61,4 +60,3 @@ def setStatus(date, status):
     
     conn.commit()
     conn.close()
-

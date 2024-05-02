@@ -8,6 +8,7 @@ def make_table():
     c.execute("""CREATE TABLE if not exists exchanges (
               exchange_date STR,
               status BOOL)""")
+    
 def inDB(date):
     date=date.lower()
     conn = sqlite3.connect(OPENORCLOSED)

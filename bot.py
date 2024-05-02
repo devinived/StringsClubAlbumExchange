@@ -162,10 +162,10 @@ async def set_submission_window(interaction:discord.Interaction, which_exchange:
 
     OOC.setStatus(date=which_exchange, status = status.value)
     if status.value:
-        status = "On"
+        status = "Open"
     else:
-        status = "Off"
-    await interaction.response.send_message(f"Submission Window: {status.value}")
+        status = "Closed"
+    await interaction.response.send_message(f"Submission Window: {status}")
 """The following are the autocompletes for their respective commands, which just fill in the active exchanges"""
 @join_exchange.autocomplete("which_exchange")
 async def join_autocomplete(

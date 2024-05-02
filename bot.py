@@ -47,6 +47,7 @@ async def help(interaction:discord.Interaction):
     helpEmbed.add_field(name="/end_exchange [which_exchange]", value = "Exchange Admin Use Only: Ends a specified Album Exchange")
     helpEmbed.add_field(name="/create_assignments [which_exchange]", value = "Randomly selects an album for everyone who is participating in the exchange.")
     helpEmbed.add_field(name="/user_joined_exchange [which_exchange] (user)", value = "Check if a user is entered into the Album Exchange")
+    helpEmbed.add_field(name="/set_submission_window [status]", value="Toggles whether submissions are being taken")
     await interaction.response.send_message(embed=helpEmbed)
 
 @bot.tree.command(description = "Sets up an Album Exchange")
@@ -64,7 +65,7 @@ async def setup_exchange(interaction:discord.Interaction, enddate:str):
 
     channel=bot.get_channel(EXCHANGE_INFO)
     await channel.send(f"# A New Album Exchange Has Started!\nThe end date will be `{enddate}`",allowed_mentions=None)
-
+    OOC.add_one(enddate,status=True)
 
 @bot.tree.command(description = "Join the album exchange! listed is the end date of the current exchange. Join that one!")
 @app_commands.describe(which_exchange = "The Album Exchange to take part in.", entry = "The spotify link to your album of choice.")

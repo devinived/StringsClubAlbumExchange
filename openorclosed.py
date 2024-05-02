@@ -52,7 +52,6 @@ def setStatus(date, status):
     if not inDB(date):
         return False
     status = bool(status)
-    print(status)
     conn = sqlite3.connect(OPENORCLOSED)
     c = conn.cursor()
 

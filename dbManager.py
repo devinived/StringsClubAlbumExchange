@@ -16,7 +16,8 @@ def make_table(date):
 
     c.execute("""CREATE TABLE if not exists entries (
               user_id INT,
-              entry_url STR)""")
+              entry_url STR,
+              entry_name STR)""")
     
 def getExchanges():
     allexchanges = os.listdir(CURRENT)
@@ -25,22 +26,19 @@ def getExchanges():
         exchanges.append(str(i).strip(".db"))
     return exchanges
 
-def joinExchange(date, user_id, entry_url):
+def joinExchange(date, user_id, entry_url, entry_name):
     date = date.lower()
     conn = sqlite3.connect(f"{CURRENT}/{date}.db")
     c = conn.cursor()
 
     c.execute(("""
-            INSERT INTO entries VALUES (?,?)   
-               """),(user_id,entry_url))
+            INSERT INTO entries VALUES (?,?,?)   
+               """),(user_id,entry_url,entry_name))
     conn.commit()
     conn.close() 
 
 def archive(date):
-    conn = sqlite3.connect(f"{CURRENT}/{date}.db")
-
     date = date.lower()
-    conn.close()
     os.rename(src = f"{CURRENT}/{date}.db",dst = f"{ARCHIVE}/{date}.db")
 
 def show_all(date):
@@ -62,7 +60,12 @@ def userJoined(date, user_id):
         return True
     else:
         return False
-    
+def getNameforAlbum(date, album_link):
+    conn = sqlite3.connect(f"{CURRENT}/{date}.db")
+    c = conn.cursor()
+    c.execute("SELECT entry_name fROM entries WHERE entry_url = (?)", (album_link,))
+    result = c.fetchone()
+    return str(result).replace("[","").replace("(","").replace("]","").replace(")","").replace(",","")
 def shuffle(date):
     redo = True
     while redo:
@@ -86,11 +89,13 @@ def shuffle(date):
                 while choice == user[1]:
                     choice = random.choice(links)
                 links.remove(choice)
-                output.append((user[0],choice))
-        #tthis check here just in case for some reason the output doesnt have everyone's assignment, which has happened during testing
+                output.append((user[0],choice,getNameforAlbum(date,choice)))
+        #this check here just in case for some reason the output doesnt have everyone's assignment, which has happened during testing
         if len(output) == len(allrows):
             return output
         else:
             redo=True
             output=[]
             links=[]
+
+print(shuffle("test"))

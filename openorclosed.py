@@ -41,9 +41,11 @@ def getStatus(date):
 
     c.execute("SELECT status fROM exchanges WHERE exchange_date = (?)", (date,))
     result = c.fetchall()
-    print(result)
     result = str(result).replace("[","").replace("(","").replace("]","").replace(")","")
+
     if "True" in result:
+        return True
+    elif "1" in result:
         return True
     else:
         return False

@@ -37,6 +37,17 @@ def validExchangeDate(date):
 async def on_ready():
     print(f"Synced {len(await bot.tree.sync())} commands globally")
 
+
+@bot.tree.command(description="View my commands")
+async def help(interaction:discord.Interaction):
+    helpEmbed:discord.Embed = discord.Embed(title="Album Exchange Commands", color=discord.Color.from_str("#b03f33"))
+    helpEmbed.add_field(name="/setup_exchange [enddate]", value = "Exchange Admin Use Only: Creates a new Album Exchange with the specified end date")
+    helpEmbed.add_field(name="/join_exchange [which_exchange]", value = "Enters you into the selected album exchange. Get your ears ready to discover some new music and review it!")
+    helpEmbed.add_field(name="/end_exchange [which_exchange]", value = "Exchange Admin Use Only: Ends a specified Album Exchange")
+    helpEmbed.add_field(name="/create_assignments [which_exchange]", value = "Randomly selects an album for everyone who is participating in the exchange.")
+    helpEmbed.add_field(name="/user_joined_exchange [which_exchange] (user)", value = "Check if a user is entered into the Album Exchange")
+    await interaction.response.send_message(embed=helpEmbed)
+
 @bot.tree.command(description = "Sets up an Album Exchange")
 @app_commands.describe(enddate = "The date that you are planning on ending this album exchange.")
 async def setup_exchange(interaction:discord.Interaction, enddate:str):
@@ -71,18 +82,7 @@ async def join_exchange(interaction:discord.Interaction, which_exchange:str,entr
     await interaction.response.send_message("You've joined this exchange: remember, it's more fun if your entry is secret, that's why only you can see this message!", ephemeral=True)
     db.joinExchange(date=which_exchange,user_id=interaction.user.id, entry_url=entry)
 
-@join_exchange.autocomplete("which_exchange")
-async def join_autocomplete(
-        interaction:discord.Interaction,
-        current: str)->typing.List[app_commands.Choice[str]]:
-    
-    data = []
-    if len(db.getExchanges()) == 0:
-        data.append(app_commands.Choice(name="No active exchanges :(", value = "No active"))
-    else:
-        for ex in db.getExchanges():
-            data.append(app_commands.Choice(name=ex, value=ex))
-    return data
+
 @bot.tree.command(description="This will end the specified exchange, and archive it.")
 async def end_exchange(interaction:discord.Interaction,which_exchange:str):
     if not hasperms(interaction.user.id):
@@ -100,21 +100,14 @@ async def end_exchange(interaction:discord.Interaction,which_exchange:str):
 
     except Exception as e:
         await interaction.response.send_message(f"Error: {e}")
-@end_exchange.autocomplete("which_exchange")
-async def end_autocomplete(
-        interaction:discord.Interaction,
-        current: str)->typing.List[app_commands.Choice[str]]:
-    
-    data = []
-    if len(db.getExchanges()) == 0:
-        data.append(app_commands.Choice(name="No exchanges to end", value = "No active"))
-    else:
-        for ex in db.getExchanges():
-            data.append(app_commands.Choice(name=ex, value=ex))
-    return data
+
 
 @bot.tree.command(description="Check if a given user has entered this week's Album Exchange")
 async def user_joined_exchange(interaction:discord.Interaction, which_exchange:str,user:discord.User=None):
+    if not validExchangeDate(which_exchange):
+        await interaction.response.send_message("That's not a valid album exchange, please choose from the list")
+        return
+    
     if user==None:
         user=interaction.user
     joined = db.userJoined(which_exchange,user.id)
@@ -127,18 +120,6 @@ async def user_joined_exchange(interaction:discord.Interaction, which_exchange:s
 
         else:
             await interaction.response.send_message(f"{user.mention} has **not** joined the exchange. Encourage them to join with the </join_exchange:1235053603534803057> command!", allowed_mentions=None)
-@user_joined_exchange.autocomplete("which_exchange")
-async def user_joined_autocomplete(
-        interaction:discord.Interaction,
-        current: str)->typing.List[app_commands.Choice[str]]:
-    
-    data = []
-    if len(db.getExchanges()) == 0:
-        data.append(app_commands.Choice(name="No exchange to create assignments for.", value = "No active"))
-    else:
-        for ex in db.getExchanges():
-            data.append(app_commands.Choice(name=ex, value=ex))
-    return data
 
 @bot.tree.command(description = "Creates the random assignments for the Album Exchange")
 @app_commands.describe(which_exchange="The Album Exchange to make assignments for", which_channel = "The channel to send the assignments. If none specified, defaults to current channel.")
@@ -165,6 +146,21 @@ async def create_assignments(interaction:discord.Interaction, which_exchange:str
     message = await channel.send(message)
     await interaction.followup.send(content = f"Assignments created: {message.jump_url}")
 
+
+"""The following are the autocompletes for their respective commands, which just fill in the active exchanges"""
+@join_exchange.autocomplete("which_exchange")
+async def join_autocomplete(
+        interaction:discord.Interaction,
+        current: str)->typing.List[app_commands.Choice[str]]:
+    
+    data = []
+    if len(db.getExchanges()) == 0:
+        data.append(app_commands.Choice(name="No active exchanges :(", value = "No active"))
+    else:
+        for ex in db.getExchanges():
+            data.append(app_commands.Choice(name=ex, value=ex))
+    return data
+
 @create_assignments.autocomplete("which_exchange")
 async def create_autocomplete(
         interaction:discord.Interaction,
@@ -177,5 +173,31 @@ async def create_autocomplete(
         for ex in db.getExchanges():
             data.append(app_commands.Choice(name=ex, value=ex))
     return data
+@user_joined_exchange.autocomplete("which_exchange")
+async def user_joined_autocomplete(
+        interaction:discord.Interaction,
+        current: str)->typing.List[app_commands.Choice[str]]:
+    
+    data = []
+    if len(db.getExchanges()) == 0:
+        data.append(app_commands.Choice(name="No exchange to create assignments for.", value = "No active"))
+    else:
+        for ex in db.getExchanges():
+            data.append(app_commands.Choice(name=ex, value=ex))
+    return data
+
+@end_exchange.autocomplete("which_exchange")
+async def end_autocomplete(
+        interaction:discord.Interaction,
+        current: str)->typing.List[app_commands.Choice[str]]:
+    
+    data = []
+    if len(db.getExchanges()) == 0:
+        data.append(app_commands.Choice(name="No exchanges to end", value = "No active"))
+    else:
+        for ex in db.getExchanges():
+            data.append(app_commands.Choice(name=ex, value=ex))
+    return data
+
 bot.run(TOKEN)
 

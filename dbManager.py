@@ -97,5 +97,3 @@ def shuffle(date):
             redo=True
             output=[]
             links=[]
-
-print(shuffle("test"))

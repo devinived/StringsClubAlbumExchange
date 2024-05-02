@@ -8,7 +8,6 @@ print("Connected to db manager")
 CURRENT = "exchanges"
 ARCHIVE = "old exchanges"
 
-
 def make_table(date):
     date = date.lower()
     conn = sqlite3.connect(f"{CURRENT}/{date}.db")
@@ -60,12 +59,14 @@ def userJoined(date, user_id):
         return True
     else:
         return False
+    
 def getNameforAlbum(date, album_link):
     conn = sqlite3.connect(f"{CURRENT}/{date}.db")
     c = conn.cursor()
     c.execute("SELECT entry_name fROM entries WHERE entry_url = (?)", (album_link,))
     result = c.fetchone()
     return str(result).replace("[","").replace("(","").replace("]","").replace(")","").replace(",","")
+
 def shuffle(date):
     redo = True
     while redo:

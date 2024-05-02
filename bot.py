@@ -7,6 +7,7 @@ import typing
 import asyncio
 from datetime import datetime
 import dbManager as db
+import openorclosed as OOC
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
@@ -68,6 +69,9 @@ async def setup_exchange(interaction:discord.Interaction, enddate:str):
 @bot.tree.command(description = "Join the album exchange! listed is the end date of the current exchange. Join that one!")
 @app_commands.describe(which_exchange = "The Album Exchange to take part in.", entry = "The spotify link to your album of choice.")
 async def join_exchange(interaction:discord.Interaction, which_exchange:str,entry:str):
+    if OOC.getStatus(which_exchange) == False:
+        await interaction.response.send_message("The submission window is now closed. Please try to enter the next exchange.")
+        return
     if not "https://open.spotify.com/album" in entry:
         await interaction.response.send_message("That doesn't seem to be a valid Spotify Album URL. Double-check please.",ephemeral=True)
         return 
@@ -146,7 +150,16 @@ async def create_assignments(interaction:discord.Interaction, which_exchange:str
     message = await channel.send(message)
     await interaction.followup.send(content = f"Assignments created: {message.jump_url}")
 
+@bot.tree.command()
+@app_commands.choices(status=[app_commands.Choice(name="Open", value=1),app_commands.Choice(name="Closed", value=0)])
+async def set_submission_window(interaction:discord.Interaction, which_exchange:str, status:app_commands.Choice[int]):
+    if not hasperms(interaction.user.id):
+        interaction.response.send_message("You can't do that.")
+        return
 
+    OOC.setStatus(date=which_exchange, status = status.value)
+
+    await interaction.response.send_message(f"Submission Window: {status.value}")
 """The following are the autocompletes for their respective commands, which just fill in the active exchanges"""
 @join_exchange.autocomplete("which_exchange")
 async def join_autocomplete(
@@ -194,6 +207,18 @@ async def end_autocomplete(
     data = []
     if len(db.getExchanges()) == 0:
         data.append(app_commands.Choice(name="No exchanges to end", value = "No active"))
+    else:
+        for ex in db.getExchanges():
+            data.append(app_commands.Choice(name=ex, value=ex))
+    return data
+@set_submission_window.autocomplete("which_exchange")
+async def submission_autocomplete(
+        interaction:discord.Interaction,
+        current: str)->typing.List[app_commands.Choice[str]]:
+    
+    data = []
+    if len(db.getExchanges()) == 0:
+        data.append(app_commands.Choice(name="No active exchanges :(", value = "No active"))
     else:
         for ex in db.getExchanges():
             data.append(app_commands.Choice(name=ex, value=ex))

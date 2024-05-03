@@ -51,12 +51,12 @@ async def help(interaction:discord.Interaction):
     await interaction.response.send_message(embed=helpEmbed)
 
 @bot.tree.command(description = "Sets up an Album Exchange")
-@app_commands.describe(enddate = "The date that you are planning on ending this album exchange.",announce="Send the setup message?")
-async def setup_exchange(interaction:discord.Interaction, enddate:str,announce:bool=False):
+@app_commands.describe(enddate = "The date that you are planning on ending this album exchange.", announce="Send the setup message? (set to false for testing)")
+async def setup_exchange(interaction:discord.Interaction, enddate:str, announce:bool=False):
     if not hasperms(interaction.user.id):
         interaction.response.send_message("You can't do that.")
         return
-    
+
     confirmation:discord.Embed = discord.Embed(title="Exchange Started!", color=discord.Color.green())
     confirmation.add_field(name="Started by", value = f"{interaction.user.mention}")
     confirmation.add_field(name="Ending date", value = f"{enddate}")
@@ -84,7 +84,7 @@ async def join_exchange(interaction:discord.Interaction, which_exchange:str,entr
         await interaction.response.send_message("You've already joined the Album Exchange!")
         return
     channel=bot.get_channel(EXCHANGE_INFO)
-    await channel.send(f"{interaction.user.mention} has entered the album exchange!")
+    await channel.send(f"{interaction.user.mention} has entered the `{which_exchange}` album exchange!")
     await interaction.response.send_message("You've joined this exchange: remember, it's more fun if your entry is secret, that's why only you can see this message!", ephemeral=True)
     db.joinExchange(date=which_exchange,user_id=interaction.user.id, entry_url=entry, entry_name=album_name)
 
@@ -128,12 +128,14 @@ async def user_joined_exchange(interaction:discord.Interaction, which_exchange:s
             await interaction.response.send_message(f"{user.mention} has **not** joined the exchange. Encourage them to join with the </join_exchange:1235053603534803057> command!", allowed_mentions=None)
 
 @bot.tree.command(description = "Creates the random assignments for the Album Exchange")
-@app_commands.describe(which_exchange="The Album Exchange to make assignments for", which_channel = "The channel to send the assignments. If none specified, defaults to current channel.")
-async def create_assignments(interaction:discord.Interaction, which_exchange:str, which_channel:discord.TextChannel = None):
+@app_commands.describe(which_exchange="The Album Exchange to make assignments for", which_channel = "The channel to send the assignments. If none specified, defaults to current channel.", forum_url ="The URL for the forum post where this exchange is happening.")
+async def create_assignments(interaction:discord.Interaction, which_exchange:str, forum_url:str, which_channel:discord.TextChannel = None):
     if not hasperms(interaction.user.id):
         interaction.response.send_message("You can't do that.")
         return
-
+    if not forum_url.startswith("https://discord.com/channels/"):
+        interaction.response.send_message("That's not a valid forum URL", ephemeral = True)
+        return
     await interaction.response.defer(thinking=True)
     if which_channel:
         channel = which_channel.id
@@ -148,7 +150,7 @@ async def create_assignments(interaction:discord.Interaction, which_exchange:str
     for user in shuffled:
         #adds the user mention, the album name, and then the link
         message += f"<@{user[0]}>\n**{user[2]}**\n<{user[1]}>\n\n"
-    message += f"This exchange is scheduled to end `{which_exchange}`, try to have your submissions in by then in <#883464528992567326>"
+    message += f"This exchange is scheduled to end `{which_exchange}`, try to have your submissions in by then in {forum_url}"
     channel = bot.get_channel(channel)
     message = await channel.send(content=message,allowed_mentions=None)
     await interaction.followup.send(content = f"Assignments created: {message.jump_url}")

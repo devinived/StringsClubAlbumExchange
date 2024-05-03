@@ -6,7 +6,7 @@ import os
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 # Define URLs for profile picture and banner
-PROFILE_IMAGE_URL = "https://media.discordapp.net/attachments/1235686662173102121/1235687610429739098/icon.png?ex=66354744&is=6633f5c4&hm=6d6d9ccb3a55e2d98cfa5f51dfb9ca89097cafce8e59b3d266a947d34dcfcd9e&=&format=webp&quality=lossless&width=624&height=624"
+PROFILE_IMAGE_URL = "https://media.discordapp.net/attachments/1235686662173102121/1235826842640973895/icon.gif?ex=6635c8ef&is=6634776f&hm=52e73811ac2fb75a8da9736372301bfaf909af39560e6583fd5f9dc42962592e&=&width=624&height=624"
 BANNER_IMAGE_URL = "https://cdn.discordapp.com/attachments/1235686662173102121/1235690554449203322/record_spin.gif?ex=66354a02&is=6633f882&hm=9181e714c4692922d9663119b05942ccb59a9f74ba4803e105c0baedfc19f3f9&"
 
 # Download profile and banner images

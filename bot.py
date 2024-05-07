@@ -43,7 +43,7 @@ async def on_ready():
 @bot.tree.command(description="View my commands")
 async def help(interaction:discord.Interaction):
     helpEmbed:discord.Embed = discord.Embed(title="Album Exchange Commands", color=discord.Color.from_str("#b03f33"))
-    helpEmbed.add_field(name="/setup_exchange [enddate]", value = "Exchange Admin Use Only: Creates a new Album Exchange with the specified end date")
+    helpEmbed.add_field(name="/setup_exchange [timeframe]", value = "Exchange Admin Use Only: Creates a new Album Exchange with the specified time frame")
     helpEmbed.add_field(name="/join_exchange [which_exchange]", value = "Enters you into the selected album exchange. Get your ears ready to discover some new music and review it!")
     helpEmbed.add_field(name="/end_exchange [which_exchange]", value = "Exchange Admin Use Only: Ends a specified Album Exchange")
     helpEmbed.add_field(name="/create_assignments [which_exchange]", value = "Randomly selects an album for everyone who is participating in the exchange.")
@@ -52,22 +52,22 @@ async def help(interaction:discord.Interaction):
     await interaction.response.send_message(embed=helpEmbed)
 
 @bot.tree.command(description = "Sets up an Album Exchange")
-@app_commands.describe(enddate = "The date that you are planning on ending this album exchange.", announce="Send the setup message? (set to false for testing)")
-async def setup_exchange(interaction:discord.Interaction, enddate:str, announce:bool=False):
+@app_commands.describe(timeframe = "The dates that the exchange occurs (ex: May 1 - May 8)", announce="Send the setup message? (set to false for testing)")
+async def setup_exchange(interaction:discord.Interaction, timeframe:str, announce:bool=True):
     if not hasperms(interaction.user.id):
         interaction.response.send_message("You can't do that.")
         return
 
     confirmation:discord.Embed = discord.Embed(title="Exchange Started!", color=discord.Color.green())
     confirmation.add_field(name="Started by", value = f"{interaction.user.mention}")
-    confirmation.add_field(name="Ending date", value = f"{enddate}")
+    confirmation.add_field(name="Time Frame", value = f"{timeframe}")
     await interaction.response.send_message(embed=confirmation)
-    db.make_table(date=enddate)
+    db.make_table(date=timeframe)
     if announce:
 
         channel=bot.get_channel(EXCHANGE_INFO)
-        await channel.send(f"# A New Album Exchange Has Started!\nThe end date will be `{enddate}`",allowed_mentions=None)
-    OOC.add_one(enddate,status=True)
+        await channel.send(f"# A New Album Exchange Has Started!\nTime Frame: `{timeframe}`",allowed_mentions=None)
+    OOC.add_one(timeframe,status=True)
 
 @bot.tree.command(description = "Join the album exchange! listed is the end date of the current exchange. Join that one!")
 @app_commands.describe(which_exchange = "The Album Exchange to take part in.", entry = "The spotify link to your album of choice.", album_name="format: Album Name - Artist")
@@ -91,7 +91,8 @@ async def join_exchange(interaction:discord.Interaction, which_exchange:str,entr
 
 
 @bot.tree.command(description="This will end the specified exchange, and archive it.")
-async def end_exchange(interaction:discord.Interaction,which_exchange:str):
+@app_commands.describe(which_exchange = "Which exchange to end?", announce="Send the setup message? (set to false for testing)")
+async def end_exchange(interaction:discord.Interaction,which_exchange:str, announce:bool=True):
     if not hasperms(interaction.user.id):
         interaction.response.send_message("You can't do that.")
         return
@@ -101,9 +102,10 @@ async def end_exchange(interaction:discord.Interaction,which_exchange:str):
         return
     try:
         db.archive(which_exchange)
-        await interaction.response.send_message("Album Exchange Ended.")
-        channel=bot.get_channel(EXCHANGE_INFO)
-        await channel.send(f"# Exchange Ended!\nThe exchange ending `{which_exchange}` has concluded. Thanks for participating!",allowed_mentions=None)
+        if announce:
+            await interaction.response.send_message("Album Exchange Ended.")
+            channel=bot.get_channel(EXCHANGE_INFO)
+            await channel.send(f"# Exchange Ended!\nThe `{which_exchange}` Album Exchange has concluded. Thanks for participating!",allowed_mentions=None)
 
     except Exception as e:
         await interaction.response.send_message(f"Error: {e}")

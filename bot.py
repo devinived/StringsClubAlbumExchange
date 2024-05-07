@@ -38,6 +38,7 @@ def validExchangeDate(date):
 async def on_ready():
     print(f"Synced {len(await bot.tree.sync())} commands globally")
 
+    await bot.change_presence(status = discord.Status.do_not_disturb, activity=discord.CustomActivity(name="Join the next album exchange!"))
 
 @bot.tree.command(description="View my commands")
 async def help(interaction:discord.Interaction):

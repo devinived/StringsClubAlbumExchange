@@ -131,10 +131,10 @@ async def user_joined_exchange(interaction:discord.Interaction, which_exchange:s
 @app_commands.describe(which_exchange="The Album Exchange to make assignments for", which_channel = "The channel to send the assignments. If none specified, defaults to current channel.", forum_url ="The URL for the forum post where this exchange is happening.")
 async def create_assignments(interaction:discord.Interaction, which_exchange:str, forum_url:str, which_channel:discord.TextChannel = None):
     if not hasperms(interaction.user.id):
-        interaction.response.send_message("You can't do that.")
+        await interaction.response.send_message("You can't do that.")
         return
     if not forum_url.startswith("https://discord.com/channels/"):
-        interaction.response.send_message("That's not a valid forum URL", ephemeral = True)
+        await interaction.response.send_message("That's not a valid forum URL", ephemeral = True)
         return
     await interaction.response.defer(thinking=True)
     if which_channel:

@@ -70,12 +70,12 @@ async def setup_exchange(interaction:discord.Interaction, timeframe:str, announc
     OOC.add_one(timeframe,status=True)
 
 @bot.tree.command(description = "Join the album exchange! listed is the end date of the current exchange. Join that one!")
-@app_commands.describe(which_exchange = "The Album Exchange to take part in.", entry = "The spotify link to your album of choice.", album_name="format: Album Name - Artist")
-async def join_exchange(interaction:discord.Interaction, which_exchange:str,entry:str,album_name:str):
+@app_commands.describe(which_exchange = "The Album Exchange to take part in.", album_url = "The spotify link to your album of choice.", album_name="format: Album Name - Artist")
+async def join_exchange(interaction:discord.Interaction, which_exchange:str, album_url:str,album_name:str):
     if OOC.getStatus(which_exchange) == False:
         await interaction.response.send_message("The submission window is now closed. Please try to enter the next exchange.")
         return
-    if not "https://open.spotify.com/album" in entry:
+    if not "https://open.spotify.com/album" in album_url:
         await interaction.response.send_message("That doesn't seem to be a valid Spotify Album URL. Double-check please.",ephemeral=True)
         return 
     if not validExchangeDate(which_exchange):
@@ -87,7 +87,7 @@ async def join_exchange(interaction:discord.Interaction, which_exchange:str,entr
     channel=bot.get_channel(EXCHANGE_INFO)
     await channel.send(f"{interaction.user.mention} has entered the `{which_exchange}` album exchange!")
     await interaction.response.send_message("You've joined this exchange: remember, it's more fun if your entry is secret, that's why only you can see this message!", ephemeral=True)
-    db.joinExchange(date=which_exchange,user_id=interaction.user.id, entry_url=entry, entry_name=album_name)
+    db.joinExchange(date=which_exchange,user_id=interaction.user.id, entry_url=album_url, entry_name=album_name)
 
 
 @bot.tree.command(description="This will end the specified exchange, and archive it.")

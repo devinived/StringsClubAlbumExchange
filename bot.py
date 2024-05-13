@@ -106,9 +106,30 @@ async def end_exchange(interaction:discord.Interaction,which_exchange:str, annou
             await interaction.response.send_message("Album Exchange Ended.")
             channel=bot.get_channel(EXCHANGE_INFO)
             await channel.send(f"# Exchange Ended!\nThe `{which_exchange}` Album Exchange has concluded. Thanks for participating!",allowed_mentions=None)
+        else:
+            await interaction.response.send_message("Album Exchange Ended.")
 
     except Exception as e:
         await interaction.response.send_message(f"Error: {e}")
+
+@bot.tree.command(description="Get a list of all albums + their names")
+async def all_albums(interaction:discord.Interaction, which_exchange:str, embed:bool=None):
+    if not hasperms(interaction.user.id):
+        interaction.response.send_message("You can't do that.")
+        return
+    
+    if not validExchangeDate(which_exchange):
+        await interaction.response.send_message("That's not a valid album exchange, please choose from the list")
+        return
+    
+    message = ""
+    for album in db.show_all(which_exchange):
+        if not embed:
+            message += f"{album[2]} | <{album[1]}>\n"
+        else:
+            message += f"{album[2]} | {album[1]}"
+
+    await interaction.response.send_message(message)
 
 
 @bot.tree.command(description="Check if a given user has entered this week's Album Exchange")
@@ -222,6 +243,19 @@ async def end_autocomplete(
         for ex in db.getExchanges():
             data.append(app_commands.Choice(name=ex, value=ex))
     return data
+@all_albums.autocomplete("which_exchange")
+async def allAlbums_autocomplete(
+        interaction:discord.Interaction,
+        current: str)->typing.List[app_commands.Choice[str]]:
+    
+    data = []
+    if len(db.getExchanges()) == 0:
+        data.append(app_commands.Choice(name="No active exchanges :(", value = "No active"))
+    else:
+        for ex in db.getExchanges():
+            data.append(app_commands.Choice(name=ex, value=ex))
+    return data
+
 @set_submission_window.autocomplete("which_exchange")
 async def submission_autocomplete(
         interaction:discord.Interaction,

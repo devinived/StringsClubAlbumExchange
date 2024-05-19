@@ -57,7 +57,8 @@ async def setup_exchange(interaction:discord.Interaction, timeframe:str, announc
     if not hasperms(interaction.user.id):
         interaction.response.send_message("You can't do that.")
         return
-
+    #ensures the time frame gets entered into the database as lowercase.
+    timeframe = timeframe.lower()
     confirmation:discord.Embed = discord.Embed(title="Exchange Started!", color=discord.Color.green())
     confirmation.add_field(name="Started by", value = f"{interaction.user.mention}")
     confirmation.add_field(name="Time Frame", value = f"{timeframe}")
@@ -66,27 +67,27 @@ async def setup_exchange(interaction:discord.Interaction, timeframe:str, announc
     if announce:
 
         channel=bot.get_channel(EXCHANGE_INFO)
-        await channel.send(f"# A New Album Exchange Has Started!\nTime Frame: `{timeframe}`",allowed_mentions=None)
+        await channel.send(f"# A New Album Exchange Has Started!\n<@&1239388427280056320>\nTime Frame: `{timeframe}`",allowed_mentions=discord.AllowedMentions(roles=True, everyone=False))
     OOC.add_one(timeframe,status=True)
 
 @bot.tree.command(description = "Join the album exchange! listed is the end date of the current exchange. Join that one!")
 @app_commands.describe(which_exchange = "The Album Exchange to take part in.", album_url = "The spotify link to your album of choice.", album_name="format: Album Name - Artist")
 async def join_exchange(interaction:discord.Interaction, which_exchange:str, album_url:str,album_name:str):
     if OOC.getStatus(which_exchange) == False:
-        await interaction.response.send_message("The submission window is now closed. Please try to enter the next exchange.")
+        await interaction.response.send_message("The submission window is now closed. Please try to enter the next exchange.", ephemeral = True)
         return
     if not "https://open.spotify.com/album" in album_url:
         await interaction.response.send_message("That doesn't seem to be a valid Spotify Album URL. Double-check please.",ephemeral=True)
         return 
     if not validExchangeDate(which_exchange):
-        await interaction.response.send_message("That's not a valid album exchange, please choose from the list")
+        await interaction.response.send_message("That's not a valid album exchange, please choose from the list", ephemeral = True)
         return
     if db.userJoined(which_exchange, interaction.user.id):
         await interaction.response.send_message("You've already joined the Album Exchange!")
         return
     channel=bot.get_channel(EXCHANGE_INFO)
     await channel.send(f"{interaction.user.mention} has entered the `{which_exchange}` album exchange!")
-    await interaction.response.send_message("You've joined this exchange: remember, it's more fun if your entry is secret, that's why only you can see this message!", ephemeral=True)
+    await interaction.response.send_message(f"You've joined this exchange: remember, it's more fun if your entry is secret, that's why only you can see this message!\nJust as a reminder, you've entered ||{album_name}|| into the exchange.", ephemeral=True)
     db.joinExchange(date=which_exchange,user_id=interaction.user.id, entry_url=album_url, entry_name=album_name)
 
 
@@ -165,7 +166,7 @@ async def create_assignments(interaction:discord.Interaction, which_exchange:str
         channel = which_channel.id
     else:
         channel = interaction.channel.id
-    message = "# __Album Exchange Assignments:__\n"
+    message = f"# __Album Exchange Assignments:__\nBelow are the assignments for the `{which_exchange}` album exchange.\n"
 
     shuffled = db.shuffle(which_exchange)
     if shuffled == None:
@@ -174,7 +175,7 @@ async def create_assignments(interaction:discord.Interaction, which_exchange:str
     for user in shuffled:
         #adds the user mention, the album name, and then the link
         message += f"<@{user[0]}>\n**{user[2]}**\n<{user[1]}>\n\n"
-    message += f"This exchange is scheduled to end `{which_exchange}`, try to have your submissions in by then in {forum_url}"
+    message += f"Don't forget: this exchange is scheduled for `{which_exchange}`:bangbang: Please try to have your review submitted by the deadline in {forum_url}"
     channel = bot.get_channel(channel)
     message = await channel.send(content=message,allowed_mentions=None)
     await interaction.followup.send(content = f"Assignments created: {message.jump_url}")

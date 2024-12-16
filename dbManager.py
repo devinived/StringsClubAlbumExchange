@@ -22,7 +22,7 @@ def getExchanges():
     allexchanges = os.listdir(CURRENT)
     exchanges = []
     for i in allexchanges:
-        exchanges.append(str(i).strip(".db"))
+        exchanges.append(str(i).rstrip(".db"))
     return exchanges
 
 def joinExchange(date, user_id, entry_url, entry_name):

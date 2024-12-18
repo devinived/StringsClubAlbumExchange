@@ -128,7 +128,7 @@ async def all_albums(interaction:discord.Interaction, which_exchange:str, embed:
         if not embed:
             message += f"{album[2]} | <{album[1]}>\n"
         else:
-            message += f"{album[2]} | {album[1]}"
+            message += f"{album[2]} | {album[1]}\n"
 
     await interaction.response.send_message(message)
 
